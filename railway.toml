@@ -1,0 +1,36 @@
+# Railway Configuration
+# This file configures how Railway deploys the application
+
+[backend]
+name: "collab-notes-backend"
+buildCommand = "pip install -r requirements.txt"
+startCommand = "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+watchPatterns = ["backend/**/*", "requirements.txt"]
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+
+[backend.variables]
+SECRET_KEY = "${{RAILWAY_SECRET_KEY}}"
+DATABASE_URL = "sqlite+aiosqlite:///./collab_notes.db"
+DEBUG = "false"
+LOG_LEVEL = "INFO"
+CORS_ORIGINS = "[\"${{FRONTEND_URL}}\"]"
+
+[frontend]
+name: "collab-notes-frontend"
+buildCommand = "npm install && npm run build"
+startCommand = "npx serve dist -l $PORT"
+watchPatterns = ["frontend/**/*", "package.json", "package-lock.json"]
+
+[frontend.variables]
+VITE_API_URL = "${{BACKEND_URL}}"
+VITE_WS_URL = "wss://${{RAILWAY_STATIC_URL}}"
+
+# Environment-specific configurations
+[environments.production.backend.variables]
+DEBUG = "false"
+LOG_LEVEL = "WARNING"
+
+[environments.staging.backend.variables]
+DEBUG = "true"
+LOG_LEVEL = "DEBUG"
